@@ -1,0 +1,1 @@
+Remove random "#" walls
