@@ -1,57 +1,61 @@
-function Game {
-    # Set global variables for rendering
-    $global:FOV = [math]::PI / 3  # Field of view (60 degrees)
-    $global:maxDepth = 64  # Max raycasting depth
-    # Expanded shading array with block characters for solid walls
+function Juego {
+    # Configurar variables globales para el renderizado
+    $global:FOV = [math]::PI / 3  # FOV (60 degrees)
+    $global:maxDepth = 64  # maxima distancia de raycasting
+    # Caracteres de distancia a objetos
     $global:shading = @(
-        ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ":", ":", ":", ":", "*", "*", "*", "*", "o", "$", "#"#, "▓", "█", "▒", "░"
+        ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ":", ":", ":", ":", "*", "*", "*", "*", "o", "$", "#"
     )
 
+    # Caracter que representa la salida
     $exitChar = "`e"
 
+    # Copia del mapa sin colores
     $global:map2 = ""
 
-    $global:sleepTime = 0
-    $Red    = "`e[31m"  # Red color
-    $Green  = "`e[32m"  # Green color
-    $Yellow = "`e[33m"  # Yellow color
-    $Blue   = "`e[34m"  # Blue color
-    $Reset  = "`e[0m"   # Reset color
+    $global:sleepTime = 5 # Milisegundos
 
-    # Color mode
+    $Red    = "`e[31m"  # Color Rojo
+    $Green  = "`e[32m"  # Color Verde
+    $Yellow = "`e[33m"  # Color Amarillo
+    $Blue   = "`e[34m"  # Color Azul
+    $Reset  = "`e[0m"   # Reset
+
+    # Modo de color
     $global:colorActive = $true
 
-    # Debug mode
+    # Modo debug
     $global:debugActive = $false
 
-    # Example map (you can modify it)
+    # Modo de mapa
     $global:mapActive = $false
 
+    # Menu principal
     function Main-Menu {
         while ($done -ne $true) {
             Clear-Host
-            Write-Host "Controls:"
-            Write-Host "`tW`tWalk"
-            Write-Host "`tA`tRotate Left"
-            Write-Host "`tS`tWalk Backwards"
-            Write-Host "`tD`tRotate Right"
-            Write-Host "`tB`tOpen Debug"
-            Write-Host "`tM`tOpen Map"
-            Write-Host "`tC`tColor mode (on/off)"
+            Write-Host "Controles:"
+            Write-Host "`tW`tCaminar"
+            Write-Host "`tA`tGirar izquierda"
+            Write-Host "`tS`tCaminar atras"
+            Write-Host "`tD`tGirar derechas"
+            Write-Host "`tB`tAbrir Debug"
+            Write-Host "`tM`tAbrir Mapa"
+            Write-Host "`tC`tModo color (on/off)"
             Write-Host
-            Write-Host "Select map dimensions:"
-            Write-Host "`t1.`t8x8       (Sandbox)"
-            Write-Host "`t2.`t16x16     (Very Easy)"
-            Write-Host "`t3.`t32x32     (Easy)"
-            Write-Host "`t4.`t64x64     (Medium)"
-            Write-Host "`t5.`t128x128   (Hard)"
-            Write-Host "`t6.`t256x256   (Very Hard)"
-            Write-Host "`t7.`t512x512   (Extreme)"
-            Write-Host "`t8.`t1024x1024 (Brainfuck)"
+            Write-Host "Selecciona las dimensiones del mapa:"
+            Write-Host "`t1.`t8x8       (Prueba)"
+            Write-Host "`t2.`t16x16     (Muy Facil)"
+            Write-Host "`t3.`t32x32     (Facil)"
+            Write-Host "`t4.`t64x64     (Medio)"
+            Write-Host "`t5.`t128x128   (Dificil)"
+            Write-Host "`t6.`t256x256   (Muy Dificil)"
+            Write-Host "`t7.`t512x512   (Extremo)"
+            Write-Host "`t8.`t1024x1024 (Pesadilla)"
             Write-Host "`t9.`tCustom"
             Write-Host "`t0.`tExit"
             Write-Host
-            $choice = Read-Host "Select option (1, 2, 3...)"
+            $choice = Read-Host "Selecciona una opcion (1, 2, 3...)"
 
             switch ($choice) {
                 "1" {
@@ -95,32 +99,32 @@ function Game {
                     $done = $true
                 }
                 "9" {
-                    [int]$inputWidth  = Read-Host "Enter width (Has to be a power of 2)"
+                    [int]$inputWidth  = Read-Host "Seleccionar ancho (Tiene que ser potencia de 2)"
                     if (($inputWidth -gt 0) -and (($inputWidth -band ($inputWidth - 1)) -eq 0)) {
                         if ($inputWidth -ge 8) {
                             $global:mapWidth = $inputWidth - 1
                         } else {
-                            Write-Host "$Red[!] The minimum dimensions are 8x8$Reset"
+                            Write-Host "$Red[!] Las dimensiones minimas son 8x8$Reset"
                             Pause
                             Main-Menu
                         }
                     } else {
-                        Write-Host "$Red[!] The number has to be a power of 2$Reset"
+                        Write-Host "$Red[!] Tiene que ser potencia de 2$Reset"
                         Pause
                         Main-Menu
                     }
                     
-                    [int]$inputHeight = Read-Host "Enter height (Has to be a power of 2)"
+                    [int]$inputHeight = Read-Host "Seleccionar altura (Tiene que ser potencia de 2)"
                     if (($inputHeight -gt 0) -and (($inputHeight -band ($inputHeight - 1)) -eq 0)) {
                         if ($inputHeight -ge 8) {
                             $global:mapHeight = $inputHeight - 1
                         } else {
-                            Write-Host "$Red[!] The minimum dimensions are 8x8$Reset"
+                            Write-Host "$Red[!] Las dimensiones minimas son 8x8$Reset"
                             Pause
                             Main-Menu
                         }
                     } else {
-                        Write-Host "$Red[!] The number has to be a power of 2$Reset"
+                        Write-Host "$Red[!] Tiene que ser potencia de 2$Reset"
                         Pause
                         Main-Menu
                     }
@@ -130,7 +134,7 @@ function Game {
                     Exit
                 }
                 default {
-                    Write-Host "$Red[!] Invalid option$Reset"
+                    Write-Host "$Red[!] Opcion invalida$Reset"
                     pause
                 }
             }
@@ -141,12 +145,12 @@ function Game {
 
     function Generate-Maze {
         param(
-            [int]$width,  # Keep odd for symmetry
+            [int]$width,  # Mantener impar y potencia de 2
             [int]$height
         )
 
-        Write-Host "$Green[+] Generating Map...$Reset"
-        Write-Host "Generating canvas"
+        Write-Host "$Green[+] Generando mapa...$Reset"
+        Write-Host "Generando canvas..."
 
         if ($width % 2 -eq 0) { $width++ }
         if ($height % 2 -eq 0) { $height++ }
@@ -180,11 +184,11 @@ function Game {
 
         $startX = [math]::Floor($width / 2)
         $startY = [math]::Floor($height / 2)
-        Write-Host "Carving maze"
+        Write-Host "Escabando caminos"
         Carve-Maze -x $startX -y $startY
 
         function Place-Exit {
-            Write-Host "Placing exit"
+            Write-Host "Creando salida"
             $exitX = $width - 1  
             $exitY = $height - 2
 
@@ -197,8 +201,8 @@ function Game {
             return $maze -replace 'E', "$red`E$reset"
         }
 
-        # **Remove 1 in 6 walls randomly (excluding outer walls)**
-        Write-Host "Removing wall randomly"
+        # Eliminar 1/6 paredes aleatorias (que no sean externas)
+        Write-Host "Eliminando paredes aleatorias"
         for ($y = 1; $y -lt $height - 1; $y++) {
             for ($x = 1; $x -lt $width - 1; $x++) {
                 if ($maze[$y][$x] -eq "#" -and (Get-Random -Minimum 1 -Maximum 7) -eq 1) {
@@ -212,68 +216,66 @@ function Game {
         return $maze
     }
 
-    # Generate the maze
+    # Generando el camino
     $global:map = Generate-Maze -width $global:mapWidth -height $global:mapHeight
 
-    # Global variables for player position and angle
-    Write-Host "$Green[+] Calculating initial position...$Reset"
+    # Variables globales para la posicion y angulo
+    Write-Host "$Green[+] Calculando posicion inicial...$Reset"
     $global:playerX = $global:mapWidth / 2
     $global:playerY = $global:mapHeight / 2
 
-    # Function to calculate angle to a target point (x, y)
+    # Funcion para calcular el angulo a un punto (x, y)
     function Calculate-Angle {
         param ($targetX, $targetY)
 
-        Write-Host "Calculating angle"
+        Write-Host "Calculando angulo"
         
-        # Calculate the angle between the player and the target (in radians)
+        # Calcular el angulo del jugador al punto (en radianes)
         $angle = [math]::Atan2($targetY - $global:playerY, $targetX - $global:playerX)
 
-        # Round the angle to 1 decimal place (rounding correctly to the nearest 0.5)
         return $angle
     }
 
-    # Function to find the first empty space around the player in cardinal directions (up, right, down, left)
+    # Funcion para calcular el angulo en puntos cardinales (arriba, derecha, abajo, izquierda)
     function Find-InitialAngle {
-        # Cardinal direction offsets (right, down, left, up)
+        # offsets de direcciones cardinales (arriba, derecha, abajo, izquierda)
         $directions = @(
-            [array]@(1, 0),  # Right
-            [array]@(0, 1),  # Down
-            [array]@(-1, 0), # Left
-            [array]@(0, -1)  # Up
+            [array]@(1, 0),  # Derecha
+            [array]@(0, 1),  # Abajo
+            [array]@(-1, 0), # Izquierda
+            [array]@(0, -1)  # Arriba
         )
 
-        Write-Host "$Green[+] Calculating Initial Angle...$Reset"
+        Write-Host "$Green[+] Calculando angulo inicial...$Reset"
 
-        # Search for the first empty space around the player
+        # Buscar el primer espacio vacio en sentido horario de la posicion del jugador
         foreach ($dir in $directions) {
             $testX = $global:playerX + $dir[0]
             $testY = $global:playerY + $dir[1]
-            Write-Host "Checking position: $([math]::Floor($testX)), $([math]::Floor($testY)) - Value: $($global:map[[math]::Floor($testY)][[math]::Floor($testX)])"
+            Write-Host "Comprobando posicion: $([math]::Floor($testX)), $([math]::Floor($testY)) - Valor: $($global:map[[math]::Floor($testY)][[math]::Floor($testX)])"
 
-            # Ensure the new position is within bounds
             if ($testX -ge 0 -and $testX -lt $global:mapWidth -and $testY -ge 0 -and $testY -lt $global:mapHeight) {
                 if ($global:map[[math]::Floor($testY)][[math]::Floor($testX)] -eq " ") {
-                    # Found an empty space, calculate the angle and return it
-                    Write-Host "Found empty space at $([math]::Floor($testX)), $([math]::Floor($testY))"
+                    # Se encontro un espacio vacio, calcular el angulo del jugador a este
+                    Write-Host "Se encontro un espacio en $([math]::Floor($testX)), $([math]::Floor($testY))"
                     
                     $angle = Calculate-Angle -targetX $testX -targetY $testY
-                    Write-Host "Initial Angle: $angle"
+                    Write-Host "Angulo inicial: $angle"
                     return $angle
                 }
             }
         }
 
-        # There's no empty space, rerun
-        Write-Host "$Red[!] Could not find any open space, regenerating maze...$Reset"
+        # No se ha encontrado ningun espacio vacio, regenerar el mapa (en caso de error)
+        Write-Host "$Red[!] No se ha encontrado ningun espacio, Regenerando mapa...$Reset"
         $map = Generate-Maze -width $global:mapWidth -height $global:mapHeight
         Find-InitialAngle
     }
 
-    # Set the player's initial angle
+    # Definir el angulo inicial del jugador
     $global:playerAngle = Find-InitialAngle
 
-    # Function to get terminal size
+    # Conseguir el tama�o de la terminal actual
     function Get-TerminalSize {
         $terminalHeight = $Host.UI.RawUI.WindowSize.Height
         if ($global:mapActive -eq $true) {
@@ -290,9 +292,9 @@ function Game {
         }
     }
 
-    # Function to render the 3D raycasting frame with minimap
+    # Funcion para renderizar los frames del juego, minimapa...
     function Render-Frame {
-        # Get the terminal size
+        # Definir tama�o de la terminal
         $terminalSize = Get-TerminalSize
         $screenWidth = $terminalSize.Width
         $screenHeight = $terminalSize.Height
@@ -301,14 +303,14 @@ function Game {
 
         if ($mapActive -and [int]$screenHeight -gt 0 -and [int]$screenWidth -gt 0 -or -not $mapActive) {
             for ($x = 0; $x -lt $screenWidth; $x++) {
-                # Ray angle based on field of view and screen position
+                # Calcular rayos basados en el FOV y tama�o de la pantalla
                 $rayAngle = ($global:playerAngle - $global:FOV / 2) + ($x / $screenWidth) * $global:FOV
 
-                # Ray direction
+                # Direccion de los rayos
                 $rayDirX = [math]::Cos($rayAngle)
                 $rayDirY = [math]::Sin($rayAngle)
 
-                # Current player grid position
+                # Posicion actual del jugador
                 $mapX = [math]::Floor($global:playerX)
                 $mapY = [math]::Floor($global:playerY)
 
@@ -316,7 +318,7 @@ function Game {
                 $deltaDistX = [math]::Abs(1 / $rayDirX)
                 $deltaDistY = [math]::Abs(1 / $rayDirY)
 
-                # Step direction (+1 or -1) and initial side distance
+                # Step (+1 o -1) y distancia inicial
                 if ($rayDirX -lt 0) {
                     $stepX = -1
                     $sideDistX = ($global:playerX - $mapX) * $deltaDistX
@@ -333,12 +335,12 @@ function Game {
                     $sideDistY = ($mapY + 1 - $global:playerY) * $deltaDistY
                 }
 
-                # Perform DDA (Digital Differential Analyzer) stepping
+                # DDA stepping
                 $hit = $false
-                $side = 0  # 0 for X-side, 1 for Y-side
+                $side = 0  # 0 X-side, 1 Y-side
 
                 while (-not $hit -and $mapX -ge 0 -and $mapX -lt $global:mapWidth -and $mapY -ge 0 -and $mapY -lt $global:mapHeight) {
-                    # Step in X or Y direction
+                    # Step en X o Y
                     if ($sideDistX -lt $sideDistY) {
                         $sideDistX += $deltaDistX
                         $mapX += $stepX
@@ -349,42 +351,42 @@ function Game {
                         $side = 1
                     }
 
-                    # Check if we've hit a wall
+                    # Comprobar si el rayo toco una pared
                     if ($global:map[$mapY][$mapX] -eq "#") {
                         $hit = $true
                     }
                 }
 
-                # Calculate distance to wall
+                # Calcular distancia a una pared
                 if ($side -eq 0) {
                     $distance = ($mapX - $global:playerX + (1 - $stepX) / 2) / $rayDirX
                 } else {
                     $distance = ($mapY - $global:playerY + (1 - $stepY) / 2) / $rayDirY
                 }
 
-                # Reverse shading for closer objects
+                # Shading inverso
                 $shadingScale = ($shading.Length - 1) / $global:maxDepth
                 $shadeIndex = [math]::Min([math]::Floor(($global:maxDepth - $distance) * $shadingScale), $shading.Length - 1)
                 $wallChar = if ($hit) { $shading[$shadeIndex] } else { " " }
 
-                # Calculate wall height
-                $wallHeight = [math]::Floor($screenHeight / $distance)
+                # Calcular altura de las paredes
+                $wallHeight = [math]::Floor($screenHeight / $distance / 1.2)
 
-                # Create an empty column
+                # Crear columna vacia
                 $column = @(" " * $screenHeight) -split ""
 
-                # Populate the column with the wall character
+                # Sobreescribir la columna con los caracteres de la pared
                 for ($y = 0; $y -lt $screenHeight; $y++) {
                     if ($y -gt ($screenHeight / 2 - $wallHeight) -and $y -lt ($screenHeight / 2 + $wallHeight)) {
                         $column[$y] = $wallChar
                     }
                 }
 
-                # Add the column to the frame
+                # A�adir la columna al proximo frame
                 $frame += ($column -join "")
             }
 
-            # Render frame
+            # Renderizar el frame
             $renderOutput = New-Object System.Text.StringBuilder
             for ($y = 0; $y -lt $screenHeight; $y++) {
                 for ($x = 0; $x -lt $screenWidth; $x++) {
@@ -394,40 +396,42 @@ function Game {
             }
         }
         
+        # Borrar frame anterior
         Clear-Host
 
+        # Mostrar el nuevo frame
         if ($mapActive -and [int]$screenHeight -gt 0 -and [int]$screenWidth -gt 0 -or -not $mapActive) {
             [System.Console]::Write($renderOutput.ToString())
         }
 
-        # Display player information and map below the 3D view
+        # Mostrar informacion de Debug debajo del juego
         if ($debugActive -eq $true) {
             Write-Host "Player Position: X = $([math]::Round($global:playerX, 2)), Y = $([math]::Round($global:playerY, 2)), Angle = $([math]::Round($global:playerAngle, 2))"
         }
 
         function Get-PlayerArrow {
-            # Normalize the angle to be between 0 and 2π (handles negative angles correctly)
+            # Normalizar el angulo entre 0 y PI
             $normalizedAngle = $global:playerAngle % (2 * [math]::PI)
 
-            # If the angle is negative, add 2π to bring it into the positive range
+            # Si el angulo es negativo a�adir PI para hacerlo positivo
             if ($normalizedAngle -lt 0) {
                 $normalizedAngle += 2 * [math]::PI
             }
 
-            # Check if the player is facing down, left, up, or right (shifted clockwise)
+            # Comprobar si el jugador esta mirando arriba, izquierda, abajo o derecha (Agujas del reloj)
             if (($normalizedAngle -lt [math]::PI / 4) -or ($normalizedAngle -ge 7 * [math]::PI / 4)) {
-                return ">"  # Facing Right (0 to π/4 or 7π/4 to 2π)
+                return ">"  # Mirando a la derecha (0 a PI/4 o 7PI/4 a 2PI)
             } elseif ($normalizedAngle -ge [math]::PI / 4 -and $normalizedAngle -lt 3 * [math]::PI / 4) {
-                return "v"  # Facing Down (π/4 to 3π/4)
+                return "v"  # Mirando hacia abajo (PI/4 a 3PI/4)
             } elseif ($normalizedAngle -ge 3 * [math]::PI / 4 -and $normalizedAngle -lt 5 * [math]::PI / 4) {
-                return "<"  # Facing Left (3π/4 to 5π/4)
+                return "<"  # Mirando a la izquierda (3PI/4 a 5PI/4)
             } else {
-                return "^"  # Facing Up (5π/4 to 7π/4)
+                return "^"  # Mirando hacia arriba (5PI/4 a 7PI/4)
             }
         }
 
         if ($global:mapActive -eq $true) {
-            # Display map with player position and direction
+            # Mostrar mapa y direccion del jugador
             for ($y = 0; $y -lt $global:map.Length; $y++) {
                 if ($colorActive) {
                     $row = $global:map[$y]
@@ -435,11 +439,11 @@ function Game {
                     $row = $global:map2[$y]
                 }
 
-                # Mark the player's position with the arrow depending on direction
+                # Marcar la posicion del jugador con las flechas segun hacia donde apunte
                 $mapRow = ""
                 for ($x = 0; $x -lt $row.Length; $x++) {
                     if ($y -eq [math]::Floor($global:playerY) -and $x -eq [math]::Floor($global:playerX)) {
-                        # Replace 'P' with the arrow for the player's facing direction
+                        # Reemplazar "P" con la flecha del angulo del jugador
                         $arrow = Get-PlayerArrow
                         $mapRow += "$green$arrow$reset"
                     } else {
@@ -452,80 +456,81 @@ function Game {
         }
 
         if ($mapActive -and $screenHeight -lt 0 -or $screenWidth -lt 0) {
-            Write-Host "$Red[!] Not enough space. Disable map, zoom out or make the screen bigger to display game frames.$Reset"
+            Write-Host "$Red[!] No hay espacio suficiente. Desactiva el mapa, Minimiza el zoom o haz la pantalla mas grande para renderizar el juego.$Reset"
         }
     }
 
-    # Move the player and check for walls
+    # Mover al jugador y comprobar paredes (fisicas)
     function Move-Player {
         param($direction)
-        $moveSpeed = 0.2  # Movement speed
-        $turnSpeed = [math]::PI / 16  # Turn speed (angle change when turning)
-        $collisionBuffer = 0.3  # Small buffer to prevent corner clipping
+        $moveSpeed = 0.2  # Velocidad de movimiento
+        $turnSpeed = [math]::PI / 16  # Velocidad de giro (angulo)
+        $collisionBuffer = 0.3  # Buffer para prevenir atravesar paredes
 
-        # Calculate proposed new position
+        # Calcular posible nueva posicion
         $newX = $global:playerX
         $newY = $global:playerY
 
         if ($direction -eq "W") {
-            # Move forward
+            # Mover hacia delante
             $newX += [math]::Cos($global:playerAngle) * $moveSpeed
             $newY += [math]::Sin($global:playerAngle) * $moveSpeed
         } elseif ($direction -eq "S") {
-            # Move backward
+            # Mover hacia atras
             $newX -= [math]::Cos($global:playerAngle) * $moveSpeed
             $newY -= [math]::Sin($global:playerAngle) * $moveSpeed
         } elseif ($direction -eq "A") {
-            # Turn left
+            # Girar a la izquierda
             $global:playerAngle -= $turnSpeed
-            return  # No need to check movement on turning
+            return  # No es necesario comprobar fisicas
         } elseif ($direction -eq "D") {
-            # Turn right
+            # Girar a la derecha
             $global:playerAngle += $turnSpeed
-            return  # No need to check movement on turning
+            return  # No es necesario comprobar fisicas
         }
 
-        # Check collision for new X position
+        # Comprobar si hay colision entre la posible posicion y una pared
         $floorX = [math]::Floor($newX)
-        $floorY = [math]::Floor($global:playerY)  # Keep Y the same for now
+        $floorY = [math]::Floor($global:playerY)  # Mantener Y
 
         if ($global:map[$floorY][$floorX] -ne "#") {
-            $global:playerX = $newX  # Move in X direction only if no collision
+            $global:playerX = $newX  # Mover X si no hay colisiones
         }
 
-        # Check collision for new Y position
-        $floorX = [math]::Floor($global:playerX)  # Keep new X from previous check
+        # Comprobar colisiones Y
+        $floorX = [math]::Floor($global:playerX)  # Mantener X (Anteriormente calculado)
         $floorY = [math]::Floor($newY)
 
         if ($global:map[$floorY][$floorX] -ne "#") {
-            $global:playerY = $newY  # Move in Y direction only if no collision
+            $global:playerY = $newY  # Mover Y si no hay colisiones
         }
     }
 
-    # Start a stopwatch to track time
-    Write-Host "$Green[+] Started timer$Reset"
+    # Comenzar un temporizador para puntos
+    Write-Host "$Green[+] Temporizador iniciado$Reset"
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
-    Write-Host "$Green[+] Game ready$Reset"
+    Write-Host "$Green[+] Juego listo$Reset"
 
-    # Game loop
-    while ($true) {
-        # Render the current frame
+    # Bucle del juego
+    $done = $false
+    while (-not $done) {
+        # Renderizar el frame
         Render-Frame
 
-        # Check if the player reached the exit
+        # Comprobar si el jugador ha llegado a la salida
         $floorX = [math]::Floor($global:playerX)
         $floorY = [math]::Floor($global:playerY)
         if ($global:map[$floorY][$floorX] -eq $exitChar) {
             Clear-Host
             $stopwatch.Stop()
             $timeTaken = [math]::Round($stopwatch.Elapsed.TotalSeconds, 2)
-            Write-Host "`n🎉 You Won! Time: $timeTaken seconds 🎉" -ForegroundColor Green
+            Write-Host "Has ganado! Tiempo: $timeTaken segundos" -ForegroundColor Green
             Pause
             break
         }
 
-        # Read input for movement
+        # Leer teclas para mover al jugador y otras acciones
         $key = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown").Character
 
         switch -wildcard ($key) {
@@ -534,8 +539,8 @@ function Game {
             '[Bb]'       { $global:debugActive = -not $global:debugActive }
             '[Qq]' {
                 Clear-Host
-                Write-Host "`n$Green[+] Leaving game...$Reset"
-                exit
+                Write-Host "`n$Green[+] Saliendo del juego...$Reset"
+                $done = $true
             }
             '[Cc]' {
                 $global:colorActive = -not $global:colorActive
@@ -555,6 +560,7 @@ function Game {
             }
         }
 
+        # Paralizar ejecucion durante un tiempo para mejorar jugabilidad
         Start-Sleep -Milliseconds $global:sleepTime
     }
 }
@@ -695,10 +701,9 @@ function Archivos {
         cls
 
         # Mostramos el Menú
-        Write-Host "########################"
-        Write-Host "##        MENÚ        ##"
-        Write-Host "########################"
-        Write-Host
+        Write-Host "#####################"
+        Write-Host "##  MENU ARCHIVOS  ##"
+        Write-Host "#####################"
         Write-Host "  1. Crear directorio"
         Write-Host "  2. Borrar directorio"
         Write-Host "  3. Listar directorios"
@@ -721,7 +726,6 @@ function Archivos {
             4 {New-File}
             5 {Del-File}
             6 {Read-File}
-            7 {exit}
             
             # En caso de introducir otra opción no definida avisar de esto
             default {
@@ -742,11 +746,13 @@ function Cuentas-AD {
     # Funcion para mostrar el menu principal
     function MostrarMenuPrincipal {
         Clear-Host
-        Write-Host "===== MENU PRINCIPAL =====" -ForegroundColor Cyan
-        Write-Host "  1 - Gestion de Usuarios"
-        Write-Host "  2 - Gestion de Equipos"
-        Write-Host "  3 - Gestion de Grupos"
-        Write-Host "  4 - Salir del Programa"
+        Write-Host "######################"
+        Write-Host "##  MENU PRINCIPAL  ##"
+        Write-Host "######################"
+        Write-Host "  1. - Gestion de Usuarios"
+        Write-Host "  2. - Gestion de Equipos"
+        Write-Host "  3. - Gestion de Grupos"
+        Write-Host "  4. - Salir del Programa"
         Write-Host
         return (Read-Host "Selecciona una opcion")
     }
@@ -754,7 +760,9 @@ function Cuentas-AD {
     # Funcion para mostrar el menu de usuarios
     function MenuUsuarios {
         Clear-Host
-        Write-Host "===== MENU DE USUARIOS =====" -ForegroundColor Cyan
+        Write-Host "########################"
+        Write-Host "##  MENU DE USUARIOS  ##"
+        Write-Host "########################"
         Write-Host "  crear  - Crear Usuario"
         Write-Host "  borrar - Eliminar Usuario"
         Write-Host "  info   - Ver Informacion de Usuario"
@@ -766,7 +774,9 @@ function Cuentas-AD {
     # Funcion para mostrar el menu de equipos
     function MenuEquipos {
         Clear-Host
-        Write-Host "===== MENU DE EQUIPOS =====" -ForegroundColor Cyan
+        Write-Host "#######################"
+        Write-Host "##  MENU DE EQUIPOS  ##"
+        Write-Host "#######################"
         Write-Host "  crear  - Crear Equipo"
         Write-Host "  borrar - Eliminar Equipo"
         Write-Host "  info   - Ver Informacion de Equipo"
@@ -778,7 +788,9 @@ function Cuentas-AD {
     # Funcion para mostrar el menu de grupos
     function MenuGrupos {
         Clear-Host
-        Write-Host "===== MENU DE GRUPOS =====" -ForegroundColor Cyan
+        Write-Host "######################"
+        Write-Host "##  MENU DE GRUPOS  ##"
+        Write-Host "######################"
         Write-Host "  crear  - Crear Grupo"
         Write-Host "  borrar - Eliminar Grupo"
         Write-Host "  info   - Ver Informacion de Grupo"
@@ -961,36 +973,182 @@ function Cuentas-AD {
     Pause
 }
 
-function Menu-Principal () {
-    Write-Host "########################"
-    Write-Host "###  MENU PRINCIPAL  ###"
-    Write-Host "########################"
-    Write-Host " 1 - Archivos"
-    Write-Host " 2 - Cuentas AD"
-    Write-Host " 3 - Recursos compartidos"
-    Write-Host " 4 - Juego laberinto"
-    Write-Host " 5 - Defensa"
-    Write-Host " 6 - Salir"
-    Write-Host
-    
-    $choice = Read-Host "Elige una opcion"
+function Recursos-Compartidos {
+    function Menu-Recursos {
+        $done = $false
+        while (-not $done) {
+            Clear-Host
+            Write-Host "#################################"
+            Write-Host "##  Menu Recursos Compartidos  ##"
+            Write-Host "#################################"
+            Write-Host "  1. -  Crear Carpeta Compartida"
+            Write-Host "  2. -  Borrar Carpeta Compartida"
+            Write-Host "  3. -  Modificar Carpeta Compartida"
+            Write-Host "  4. -  Ver Carpeta Compartida"
+            Write-Host "  5. -  Salir"
+            Write-Host
+            $opcion = Read-Host "Introduce una opcion"
 
-    switch ($choice) {
-        "1" { Archivos }
-        "2" { Cuentas-AD }
-        "3" { Recursos-Compartidos }
-        "4" { Game }
-        "5" { 
-            Write-Host "[!] Para la defensa" -ForegroundColor Red
+            switch ($opcion) {
+                "1" {
+                    Crear-RecursoCompartido
+                }
+                "2" {
+                    Borrar-RecursoCompartido
+                }
+                "3" {
+                    Modificar-RecursoCompartido
+                }
+                "4" {
+                    Ver-RecursoCompartido
+                }
+                "5" {
+                    $done = $true
+                }
+                default {
+                    Write-Host "Has introducido una opcion invalida"
+                    Pause
+                }
+            }
+        }
+    }
+
+    function Crear-RecursoCompartido {
+        $ruta = Read-Host "Dame una ruta para la carpeta"
+        if (-not (Test-Path -Path $ruta -PathType Container)) {
+            Write-Host "La ruta especificada no existe"
             Pause
-            Menu-Principal    
+            return 1
         }
-        "6" {
-            Write-Host "Saliendo del programa..."
-            Exit
+
+        $nombre = Read-Host "Dame el nombre del recurso compartido"
+        if (Get-SmbShare -Name $nombre -ErrorAction SilentlyContinue) {
+            Write-Host "Ya existe un recurso compartido con ese nombre"
+            Pause
+            return 1
         }
-        default {
-            Write-Host "[!] Opcion invalida" -ForegroundColor Red
+
+        $usuario = Read-Host "Dame un nombre de usuario"
+        if (-not (Get-ADUser -Filter { Name -eq $usuario })) {
+            if ((Get-ADGroup -Filter { Name -eq $usuario })) {
+                Write-Host "El grupo especificado no existe"
+                Pause
+                return 1
+            }
+            Write-Host "El usuario especificado no existe"
+            Pause
+            return 1
+        }
+
+        New-SmbShare -Name $nombre -Path $ruta -FullAccess $usuario
+        Write-Host "Se ha creado la carpeta compartida"
+        Pause
+    }
+
+    function Borrar-RecursoCompartido {
+        $nombre = Read-Host "Dame el nombre del recurso compartido"
+        if (-not (Get-SmbShare -Name $nombre -ErrorAction SilentlyContinue)) {
+            Write-Host "No existe un recurso compartido con ese nombre"
+            Pause
+            return 1
+        }
+
+        Remove-SmbShare -Name $nombre
+        Write-Host "Se ha borrado la carpeta especificada"
+        Pause
+    }
+
+    function Modificar-RecursoCompartido {
+        $nombre = Read-Host "Dame el nombre del recurso compartido"
+        if (-not (Get-SmbShare -Name $nombre -ErrorAction SilentlyContinue)) {
+            Write-Host "No existe un recurso compartido con ese nombre"
+            Pause
+            return 1
+        }
+
+        $usuario = Read-Host "Dame un nombre de usuario"
+        if (-not (Get-ADUser -Filter { Name -eq $usuario })) {
+            if ((Get-ADGroup -Filter { Name -eq $usuario })) {
+                Write-Host "El grupo especificado no existe"
+                Pause
+                return 1
+            }
+            Write-Host "El usuario especificado no existe"
+            Pause
+            return 1
+        }
+
+        $permiso = Read-Host "Que permisos conceder (lectura, escritura o todo)"
+
+        switch ($permiso) {
+            "lectura" {
+                Grant-SmbShareAccess -Name $nombre -AccountName $usuario -AccessRight Read 
+            }
+            "escritura" {
+                Grant-SmbShareAccess -Name $nombre -AccountName $usuario -AccessRight Change
+            }
+            "todo" {
+                Grant-SmbShareAccess -Name $nombre -AccountName $usuario -AccessRight Full
+            }
+            default {
+                Write-Host "No existe ese permiso, usa lectura, escritura o todo"
+                Pause
+                return 1
+            }
+        }
+
+        Write-Host "Se ha concedido el permiso"
+        Pause
+    }
+
+    function Ver-RecursoCompartido {
+        $nombre = Read-Host "Dame el nombre del recurso compartido"
+        if (-not (Get-SmbShare -Name $nombre -ErrorAction SilentlyContinue)) {
+            Write-Host "No existe un recurso compartido con ese nombre"
+            Pause
+            return 1
+        }
+
+        Get-SmbShareAccess -Name $nombre
+        Write-Host
+        Pause
+    }
+
+    Menu-Recursos
+}
+
+function Menu-Principal () {
+    $choice = 0
+    while ($choice -ne "6") {
+        Write-Host "########################"
+        Write-Host "###  MENU PRINCIPAL  ###"
+        Write-Host "########################"
+        Write-Host "  1. - Archivos"
+        Write-Host "  2. - Cuentas AD"
+        Write-Host "  3. - Recursos compartidos"
+        Write-Host "  4. - Juego laberinto"
+        Write-Host "  5. - Defensa"
+        Write-Host "  6. - Salir"
+        Write-Host
+    
+        $choice = Read-Host "Elige una opcion"
+
+        switch ($choice) {
+            "1" { Archivos }
+            "2" { Cuentas-AD }
+            "3" { Recursos-Compartidos }
+            "4" { Juego }
+            "5" { 
+                Write-Host "[!] Para la defensa" -ForegroundColor Red
+                Pause
+                Menu-Principal    
+            }
+            "6" {
+                Write-Host "Saliendo del programa..."
+            }
+            default {
+                Write-Host "[!] Opcion invalida" -ForegroundColor Red
+            }
         }
     }
 }
