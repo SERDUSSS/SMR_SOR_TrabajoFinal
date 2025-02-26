@@ -1120,6 +1120,7 @@ function Recursos-Compartidos {
 function Menu-Principal () {
     $choice = 0
     while ($choice -ne "6") {
+	Clear-Host
         Write-Host "########################"
         Write-Host "###  MENU PRINCIPAL  ###"
         Write-Host "########################"
