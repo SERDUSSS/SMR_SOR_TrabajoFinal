@@ -52,8 +52,8 @@ function Juego {
             Write-Host "`t6.`t256x256   (Muy Dificil)"
             Write-Host "`t7.`t512x512   (Extremo)"
             Write-Host "`t8.`t1024x1024 (Pesadilla)"
-            Write-Host "`t9.`tCustom"
-            Write-Host "`t0.`tExit"
+            Write-Host "`t9.`tPersonalizado"
+            Write-Host "`t0.`tSalir"
             Write-Host
             $choice = Read-Host "Selecciona una opcion (1, 2, 3...)"
 
@@ -131,11 +131,11 @@ function Juego {
                     $done = $true
                 }
                 "0" {
-                    Exit
+                    Write-Host "Saliendo del programa"
                 }
                 default {
                     Write-Host "$Red[!] Opcion invalida$Reset"
-                    pause
+                    Pause
                 }
             }
         }
@@ -370,7 +370,7 @@ function Juego {
                 $wallChar = if ($hit) { $shading[$shadeIndex] } else { " " }
 
                 # Calcular altura de las paredes
-                $wallHeight = [math]::Floor($screenHeight / $distance / 1.2)
+                $wallHeight = [math]::Floor($screenHeight / $distance / 1.75)
 
                 # Crear columna vacia
                 $column = @(" " * $screenHeight) -split ""
@@ -726,7 +726,7 @@ function Archivos {
             4 {New-File}
             5 {Del-File}
             6 {Read-File}
-            
+            7 {Write-Host "Saliendo del programa"}
             # En caso de introducir otra opción no definida avisar de esto
             default {
                 Write-Host "Opción" $menuinput "invalida"
@@ -735,7 +735,9 @@ function Archivos {
 
         # Esperar a que el usuario pulse enter para volver al menú
         Write-Host
-        Read-Host "Pulse enter para continuar"
+	if ($menuinput -ne "7") {
+            Pause
+        }
     }
 }
 
@@ -970,7 +972,6 @@ function Cuentas-AD {
     }
 
     Write-Host "Saliendo del programa..."
-    Pause
 }
 
 function Recursos-Compartidos {
